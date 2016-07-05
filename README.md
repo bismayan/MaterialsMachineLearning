@@ -1,2 +1,2 @@
 # materialproject_ml
-material projects based on unsupervised machine learning algorithms
+material project based on unsupervised machine learning algorithms
