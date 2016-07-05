@@ -1,0 +1,13 @@
+1. Remove space in H2 O so Composition object parses formula correctly
+
+((W (H2 O)) O2 (O2)) (H2 O)1.66  ==>  ((W (H2 O)) O2 (O2)) (H2O)1.66
+
+85608	C 1 2/m 1	((W (H2 O)) O2 (O2)) (H2 O)1.66		Structure of hydrated tungsten peroxides (W O2 (O2) H2 O) . n(H2 O)	Pecquenard, B.;  Castro-Garcia, S.;  Livage, J.;  Zavalii, P.Yu.;  Whittingham, M.S.;  Thouvenot, R.	Chemistry of Materials (1998) 10,  p1882-p1888
+
+
+
+2. Capitalize: th => Th
+
+649630	P 4/n m m Z	Pt2 th Si2	Be2CaGe2	Superconductivity and relative phase stability in 1:2:2 ternary transition metal silicides and germanides	Shelton, R.N.;  Braun, H.F.;  Musick, E.	Solid State Communications (1984) 52, (9) p797-p799
+
+
