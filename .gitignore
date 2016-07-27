@@ -1,2 +1,5 @@
 # ignore jupyter notebook checkpoint directories
 .ipynb_checkpoints/
+./src/*json
+./src/*pickle
+
