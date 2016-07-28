@@ -34,7 +34,7 @@ def read_unique_data(filename):
     return structs
 
 def get_space_groups(strts):
-    sgroups=np.array([a.get_spacegroup_info()[0] for a in strts])
+    sgroups=np.array([a.get_spacegroup_info()[1] for a in strts])
     return sgroups
 
 def read_data(filename):
@@ -57,7 +57,7 @@ def read_data(filename):
     DataFrame["Eneg2"] = eneg[:, 1]
     DataFrame["Eneg3"] = eneg[:, 2]
     DataFrame["Space Group"] = space_groups
-    DataFrame["Composition"] = comps
+    DataFrame["Formulae"] = [c.formula for c in comps]
     return DataFrame
 
 def get_comp_data(un_data):
