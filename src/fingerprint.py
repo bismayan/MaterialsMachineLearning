@@ -90,8 +90,49 @@ def get_phi(struct,obser='ones',rmax=15,delta=0.05,sigma=0.075,kernsize=10,tol=0
             finger[int(poin - kernsize):int(poin + kernsize + 1)] += ((prefac_inner) * kern)
 
     finger=(finger*prefac_outer)-1
-    #print "Average of last twenty bins", np.mean(finger[-1 * (kernsize + 20):-1 * kernsize])
+    print "Average of last twenty bins", np.mean(finger[-1 * (kernsize + 20):-1 * kernsize])
     return finger[0:-kernsize]
+
+def get_phi_scaled(struct,obser='ones',n_bins=100,delta=0.05,sigma=0.075,kernsize=12,tol=1e-3,debug=False):
+
+    """
+    Get the fingerprint scaled phi for a given structure
+    :param struct: The pymatgen structure you want to use
+    :param rmax: The maximum r in Angstroms you want to create the fingerprint for
+    :param obser: The observable you want to calculate the phi for
+    :param delta: The size of each array element in units scale factor (mesh size so to speak)
+    :param sigma: The sigma parameter of the gaussian used to approximate delta function in units of scale factor
+    :param kernsize: the number of array elements that the Gaussian spans on each side of the maximum
+    :param tol: The tolerance upto which two sites are assumed to be the same in space
+    """
+    spec = struct.species
+    # sf is the calculated scaling factor
+    sf=(struct.volume/len(struct.species))**(0.33)
+    kern=createKernel(kernsize,sigma*sf,delta*sf)
+    rmax=n_bins*sf*delta
+    count = Counter(spec)
+    els = [a for a in count.keys()]
+    obs=create_obs_dict(obser,els)
+    finger = np.zeros((int(n_bins + 2*kernsize)), dtype=float)
+    nb_unit=sum([count[entry1]*obs[entry1]*count[entry2]*obs[entry2] for entry1 in els for entry2 in els])
+    prefac_outer=(struct.volume)/(4*np.pi*nb_unit*(sf*sf))
+    for i, s in enumerate(spec):
+        b_i=obs[s]
+        list_at = struct.get_sites_in_sphere(struct.sites[i].coords, rmax)
+        dists = np.array([entry[-1]/sf for entry in list_at if entry[-1] > tol])
+        names = [entry[0].specie for entry in list_at if entry[-1] > tol]
+        for j, dist in enumerate(dists):
+            b_j=obs[names[j]]
+            prefac_inner=b_i*b_j/(dist * dist)
+            poin = np.floor(dist / delta)+kernsize
+            finger[int(poin - kernsize):int(poin + kernsize + 1)] += ((prefac_inner) * kern)
+		    
+    finger=(finger*prefac_outer)-1
+    if debug:
+	    print "Scale factor=",sf
+	    print "Average of last twenty bins", np.mean(finger[-1 * (kernsize + 20):-1 * kernsize])
+    return finger[kernsize:-kernsize]
+
 
 def check_sumrule(phi,struct,delta=0.05):
     R = np.array([(i) * delta for i in range(len(phi))])

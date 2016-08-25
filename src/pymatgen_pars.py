@@ -40,7 +40,7 @@ def get_space_groups(strts):
 def read_data(filename):
     """
     :argument
-    filename - The filename of the csv file to read from
+    filename - The filename of the json: file to read from
     :returns
     DataFrame - Pandas Dataframe containing the formatted parsed data
     """
