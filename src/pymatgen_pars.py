@@ -13,7 +13,7 @@ def ret_struct_obj(i):
     return mg.Structure.from_str(i,fmt="cif")
 
 def return_struct_list():
-        with open("ternaries_from_mg.pickle",'r') as f:
+        with open("../data/ternaries_from_mg.pickle",'r') as f:
             temp_list=pickle.load(f)
         p=mp.Pool(4)
         struct_lis=p.map(ret_struct_obj,temp_list)
@@ -23,7 +23,7 @@ def read_ternaries():
     with MPRester() as m:
         ternaries1 = m.query(criteria={"nelements": 3}, properties=['icsd_ids', 'pretty_formula', 'cif'])
         list_cif = [i['cif'] for i in ternaries1]
-        outfile=open("ternaries_from_mg.pickle",'w')
+        outfile=open("../data/ternaries_from_mg.pickle",'w')
         pickle.dump(list_cif,outfile)
         del(list_cif)
         outfile.close()
