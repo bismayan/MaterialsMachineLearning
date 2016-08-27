@@ -1,6 +1,7 @@
 # ignore jupyter notebook checkpoint directories
-.ipynb_checkpoints/
-src/*.json
-src/*.pickle
-src/*.pyc
-
+data/*.json
+data/*.pickle
+data/*.pyc
+data/*_part?.npz
+data/*_Pool?.ipynb
+data/finger_all.npz
