@@ -49,8 +49,13 @@ def getchi(specie):
 def get_ones(specie):
     return 1.0
 
+
+def get_oxi(specie):
+    return specie.oxi_state
+
+
 def create_obs_dict(obser,specie_list):
-    func_map= {"Z":getz,"Chi":getchi,"ones":get_ones}
+    func_map= {"Z":getz,"Chi":getchi,"ones":get_ones,"oxi":get_oxi}
     obs_dict=dict()
     for spec in specie_list:
         obs_dict[spec]=func_map[obser](spec)
@@ -93,45 +98,52 @@ def get_phi(struct,obser='ones',rmax=15,delta=0.05,sigma=0.075,kernsize=10,tol=0
     print "Average of last twenty bins", np.mean(finger[-1 * (kernsize + 20):-1 * kernsize])
     return finger[0:-kernsize]
 
-def get_phi_scaled(struct,obser='ones',n_bins=100,delta=0.05,sigma=0.075,kernsize=12,tol=1e-3,debug=False):
+def get_phi_scaled(struct,obser='ones',n_bins=100,delta=0.05,sigma=0.075,kernsize=12,tol=1e-3,debug=False,oxi_val=None,oxi_min=-4):
+ 
+     """
+     Get the fingerprint scaled phi for a given structure
+     :param struct: The pymatgen structure you want to use
+     :param nbins: The number of bins you want to create the fingerprint for
+     :param obser: The observable you want to calculate the phi for
+     :param delta: The size of each array element in units scale factor (mesh size so to speak)
+     :param sigma: The sigma parameter of the gaussian used to approximate delta function in units of scale factor
+     :param oxi_val: The list of oxidation numbers of all the species in the structure
+     :param oxi_min: The minimum of all oxidation states for the entire database. Needed because we want to shift the oxidation states
+     :param kernsize: the number of array elements that the Gaussian spans on each side of the maximum
+     :param tol: The tolerance upto which two sites are assumed to be the same in space
+     """
 
-    """
-    Get the fingerprint scaled phi for a given structure
-    :param struct: The pymatgen structure you want to use
-    :param rmax: The maximum r in Angstroms you want to create the fingerprint for
-    :param obser: The observable you want to calculate the phi for
-    :param delta: The size of each array element in units scale factor (mesh size so to speak)
-    :param sigma: The sigma parameter of the gaussian used to approximate delta function in units of scale factor
-    :param kernsize: the number of array elements that the Gaussian spans on each side of the maximum
-    :param tol: The tolerance upto which two sites are assumed to be the same in space
-    """
-    spec = struct.species
-    # sf is the calculated scaling factor
-    sf=(struct.volume/len(struct.species))**(0.33)
-    kern=createKernel(kernsize,sigma*sf,delta*sf)
-    rmax=n_bins*sf*delta
-    count = Counter(spec)
-    els = [a for a in count.keys()]
-    obs=create_obs_dict(obser,els)
-    finger = np.zeros((int(n_bins + 2*kernsize)), dtype=float)
-    nb_unit=sum([count[entry1]*obs[entry1]*count[entry2]*obs[entry2] for entry1 in els for entry2 in els])
-    prefac_outer=(struct.volume)/(4*np.pi*nb_unit*(sf*sf))
-    for i, s in enumerate(spec):
-        b_i=obs[s]
-        list_at = struct.get_sites_in_sphere(struct.sites[i].coords, rmax)
-        dists = np.array([entry[-1]/sf for entry in list_at if entry[-1] > tol])
-        names = [entry[0].specie for entry in list_at if entry[-1] > tol]
-        for j, dist in enumerate(dists):
-            b_j=obs[names[j]]
-            prefac_inner=b_i*b_j/(dist * dist)
-            poin = np.floor(dist / delta)+kernsize
-            finger[int(poin - kernsize):int(poin + kernsize + 1)] += ((prefac_inner) * kern)
-		    
-    finger=(finger*prefac_outer)-1
-    if debug:
-	    print "Scale factor=",sf
-	    print "Average of last twenty bins", np.mean(finger[-1 * (kernsize + 20):-1 * kernsize])
-    return finger[kernsize:-kernsize]
+     # sf is the calculated scaling factor
+     if obser=='oxi':
+        if oxi_val==None:
+             raise ValueError, "Must pass oxidation state array"
+        else:
+             struct.add_oxidation_state_by_site([x-oxi_min for x in oxi_val])
+     spec = struct.species
+     sf=(struct.volume/len(struct.species))**(0.33)
+     kern=createKernel(kernsize,sigma*sf,delta*sf)
+     rmax=n_bins*sf*delta
+     count = Counter(spec)
+     els = [a for a in count.keys()]
+     obs=create_obs_dict(obser,els)
+     finger = np.zeros((int(n_bins + 2*kernsize)), dtype=float)
+     nb_unit=sum([count[entry1]*obs[entry1]*count[entry2]*obs[entry2] for entry1 in els for entry2 in els])
+     prefac_outer=(struct.volume)/(4*np.pi*nb_unit*(sf*sf))
+     for i, s in enumerate(spec):
+         b_i=obs[s]
+         list_at = struct.get_sites_in_sphere(struct.sites[i].coords, rmax)
+         dists = np.array([entry[-1]/sf for entry in list_at if entry[-1] > tol])
+         names = [entry[0].specie for entry in list_at if entry[-1] > tol]
+         for j, dist in enumerate(dists):
+             b_j=obs[names[j]]
+             prefac_inner=b_i*b_j/(dist * dist)
+             poin = np.floor(dist / delta)+kernsize
+             finger[int(poin - kernsize):int(poin + kernsize + 1)] += ((prefac_inner) * kern)
+     finger=(finger*prefac_outer)-1
+     if debug:
+        print "Scale factor=",sf
+        print "Average of last twenty bins", np.mean(finger[-1 * (kernsize + 20):-1 * kernsize])
+     return finger[kernsize:-kernsize]
 
 
 def check_sumrule(phi,struct,delta=0.05):
